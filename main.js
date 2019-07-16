@@ -4,9 +4,10 @@ var bodyParser = require('body-parser')
 var compression = require('compression')
 var topicRouter = require('./routes/topic.js')
 var indexRouter = require('./routes/index')
+var helmet = require('helmet')
 
 var app = express()
-
+app.use(helmet())
 app.use(express.static('public'))
 app.use(bodyParser.urlencoded({
   extended: false
