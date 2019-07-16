@@ -4,8 +4,15 @@ var template = require('./lib/template.js')
 var path = require('path')
 var sanitizeHtml = require('sanitize-html')
 var qs = require('querystring')
+var bodyParser = require('body-parser')
+var compression = require('compression')
 
 var app = express()
+
+app.use(bodyParser.urlencoded({
+  extended: false
+}))
+app.use(compression())
 
 //route, routing
 // app.get('/',(req,res)=>res.send('Hello World!'))
@@ -23,13 +30,13 @@ app.get('/', function (req, res) {
 })
 
 app.get('/page/:pageId', function (req, res) {
-  fs.readdir('./data', function(error, filelist){
+  fs.readdir('./data', function (error, filelist) {
     var filteredId = path.parse(req.params.pageId).base;
-    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
       var title = req.params.pageId;
       var sanitizedTitle = sanitizeHtml(title);
       var sanitizedDescription = sanitizeHtml(description, {
-        allowedTags:['h1']
+        allowedTags: ['h1']
       });
       var list = template.list(filelist);
       var html = template.HTML(sanitizedTitle, list,
@@ -46,8 +53,8 @@ app.get('/page/:pageId', function (req, res) {
   });
 })
 
-app.get('/create', function(req,res){
-  fs.readdir('./data', function(error, filelist){
+app.get('/create', function (req, res) {
+  fs.readdir('./data', function (error, filelist) {
     var title = 'WEB - create';
     var list = template.list(filelist);
     var html = template.HTML(title, list, `
@@ -65,7 +72,8 @@ app.get('/create', function(req,res){
   });
 })
 
-app.post('/create_process',function(req,res){
+app.post('/create_process', function (req, res) {
+  /*
   var body = '';
       req.on('data', function(data){
           body = body + data;
@@ -78,12 +86,19 @@ app.post('/create_process',function(req,res){
             res.redirect(`/page/${title}`)
           })
       });
+      */
+  var post = req.body;
+  var title = post.title;
+  var description = post.description;
+  fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
+    res.redirect(`/page/${title}`)
+  })
 })
 
-app.get('/update/:pageId', function(req,res){
-  fs.readdir('./data', function(error, filelist){
+app.get('/update/:pageId', function (req, res) {
+  fs.readdir('./data', function (error, filelist) {
     var filteredId = path.parse(req.params.pageId).base;
-    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    fs.readFile(`data/${filteredId}`, 'utf8', function (err, description) {
       var title = req.params.pageId;
       var list = template.list(filelist);
       var html = template.HTML(title, list,
@@ -106,37 +121,56 @@ app.get('/update/:pageId', function(req,res){
   });
 })
 
-app.post('/update_process', function(req,res){
+app.post('/update_process', function (req, res) {
+  /*
   var body = '';
-      req.on('data', function(data){
-          body = body + data;
-      });
-      req.on('end', function(){
-          var post = qs.parse(body);
-          var id = post.id;
-          var title = post.title;
-          var description = post.description;
-          fs.rename(`data/${id}`, `data/${title}`, function(error){
-            fs.writeFile(`data/${title}`, description, 'utf8', function(err){
-              res.redirect(`/page/${title}`)
-            })
-          });
-      });
+  req.on('data', function (data) {
+    body = body + data;
+  });
+  req.on('end', function () {
+    var post = qs.parse(body);
+    var id = post.id;
+    var title = post.title;
+    var description = post.description;
+    fs.rename(`data/${id}`, `data/${title}`, function (error) {
+      fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
+        res.redirect(`/page/${title}`)
+      })
+    });
+  });
+  */
+  var post = req.body;
+  var id = post.id;
+  var title = post.title;
+  var description = post.description;
+  fs.rename(`data/${id}`, `data/${title}`, function (error) {
+    fs.writeFile(`data/${title}`, description, 'utf8', function (err) {
+      res.redirect(`/page/${title}`)
+    })
+  });
 })
 
-app.post('/delete_process', function(req,res){
+app.post('/delete_process', function (req, res) {
+  /*
   var body = '';
-      req.on('data', function(data){
-          body = body + data;
-      });
-      req.on('end', function(){
-          var post = qs.parse(body);
-          var id = post.id;
-          var filteredId = path.parse(id).base;
-          fs.unlink(`data/${filteredId}`, function(error){
-            res.redirect('/')
-          })
-      });
+  req.on('data', function (data) {
+    body = body + data;
+  });
+  req.on('end', function () {
+    var post = qs.parse(body);
+    var id = post.id;
+    var filteredId = path.parse(id).base;
+    fs.unlink(`data/${filteredId}`, function (error) {
+      res.redirect('/')
+    })
+  });
+  */
+  var post = req.body;
+  var id = post.id;
+  var filteredId = path.parse(id).base;
+  fs.unlink(`data/${filteredId}`, function (error) {
+    res.redirect('/')
+  });
 })
 
 app.listen(3000, function () {
